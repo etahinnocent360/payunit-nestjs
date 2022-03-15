@@ -14,7 +14,7 @@ import Joi from "joi";
 export class AppService {
   public transactions: TransactionModel[] =[]
   public payUnitData={
-    transaction_id:10,
+    transaction_id:11,
     transaction_amount:10000,
     currency:'USD',
     return_url:'http://localhost:3000',
