@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Body, HttpService, Injectable, Param } from '@nestjs/common';
-import { TransactionModel } from "./transaction.model";
+import { Payment, TransactionModel } from "./transaction.model";
 import { GetTransaction } from "./transaction.model";
 import { response } from 'express';
 import { configurations } from './lib/Configuration';
@@ -9,72 +9,67 @@ import { date, number, string } from 'joi';
 import axios from 'axios';
 import { config } from 'rxjs';
 import Joi from "joi";
+import { Session } from 'express-session';
 
 @Injectable()
 export class AppService {
-  public transactions: TransactionModel[] =[]
-  public payUnitData={
-    transaction_id:11,
-    transaction_amount:10000,
-    currency:'USD',
-    return_url:'http://localhost:3000',
-  };
-  // private all
-  private completeTransaction = {
-    gateway: 'mtnmomo',
-    transaction_amount: 1001,
-    transaction_id: 1005,
-    phone_number: 681479697,
-    currency: 'USD',
-    paymentType: 'button',
-  };
+  private all
+  public  getIninitial: GetTransaction[] =[]
+  public transaction: TransactionModel[] =[]
+  public  payment:Payment[] =[]
   private urlinitialized = 'https://app.payunit.net/api/gateway/initialize';
   private paymentUrl = 'https://app.payunit.net/api/gateway/makepayment';
-  private urlproceed = 'https://app.payunit.net/api';
+  private urlproceed = 'https://app.payunit.net/api/gateway/gateways?t_url=""&t_id=""&t_sum=""';
   constructor(
     private httpService: HttpService,
     private configService: ConfigService,
   ) {}
 
-  async postApi() {
+  async postApi(transaction_id:string, total_amount:number,  currency:string, return_url:string) {
+    const newTransaction =new TransactionModel(
+      transaction_id,
+      total_amount,
+      currency,
+      return_url)
+    this.transaction.push(newTransaction)
     const appBasic = `${process.env.apiSecret}`;
     const buff = Buffer.from(appBasic);
     const base64data = buff.toString('base64');
     console.log(base64data);
     await axios
       .post(
-        this.urlinitialized,
+        `${this.urlinitialized}`,
         {
-          transaction_id:this.payUnitData.transaction_id,
-          transact_amount:this.payUnitData.transaction_amount,
-          currency:this.payUnitData.currency,
-          return_url:this.payUnitData.return_url
+          transaction_id:newTransaction.transaction_id,
+          total_amount:newTransaction.transaction_amount,
+          currency:newTransaction.currency,
+          return_url:newTransaction.return_url
         },
         {
           headers: {
-            'Authorization': `Basic ${base64data}`,
             'Content-Type': 'application/json',
+            'Authorization': `Basic ${base64data}`,
             'x-api-Key': process.env.apiKey,
             'mode': process.env.mode,
           },
         },
       )
       .then((request) => {
-        // this.all = response.data
-        // console.log(this.all)
-        console.log(request.data)
+        this.all = request.data
+        console.log(this.all)
+        return this.all
       })
       .catch((error) => {
         console.log(error);
       });
   }
-  getTransact(params) {
+  getTransact() {
     const appBasic = `${process.env.apiSecret}`;
     const buff = Buffer.from(appBasic);
     const base64data = buff.toString('base64');
     console.log(base64data);
     return axios
-      .get(`${this.urlproceed}/gateway/gateways?t_url=""&t_id=""&t_sum=""`, {
+      .get(`${this.urlproceed}`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${base64data}`,
@@ -83,9 +78,9 @@ export class AppService {
         },
       },
       )
-      .then((request) => {
-        // request = this.all.t_id
-        console.log(request)
+      .then((response) => {
+        response = this.all
+        console.log(response)
       })
       .catch((error) => {
         console.log(error);
@@ -94,7 +89,16 @@ export class AppService {
 
   //make payment
 
-  async makePayment() {
+  async makePayment(gateway: string, amount: number, transaction_id: string, phone_number: number, currency: string, paymentType: string,) {
+    const newPayment = new Payment(
+      gateway,
+      amount,
+      transaction_id,
+      phone_number,
+      currency,
+      paymentType
+    )
+    this.payment.push(newPayment)
     const appBasic = `${process.env.apiSecret}`;
     const buff = Buffer.from(appBasic);
     const base64data = buff.toString('base64');
@@ -103,12 +107,12 @@ export class AppService {
       .post(
         this.paymentUrl,
         {
-          gateway: this.completeTransaction.gateway,
-          total_amount: this.completeTransaction.transaction_amount,
-          transaction_id: this.completeTransaction.transaction_id,
-          phone_number: this.completeTransaction.phone_number,
-          currency: this.completeTransaction.currency,
-          paymentType: this.completeTransaction.paymentType,
+          gateway: newPayment.gateway,
+          amount: newPayment.amount,
+          transaction_id:newPayment.transaction_id,
+          phone_number: newPayment.phone_number,
+          currency: newPayment.currency,
+          paymentType: newPayment.paymentType,
         },
         {
           headers: {
@@ -120,8 +124,8 @@ export class AppService {
         },
       )
       .then((request) => {
-        console.log(request.data);
-        request.data;
+        this.all =request.data
+        console.log(this.all)
       })
       .catch((error) => {
         console.log(error);
