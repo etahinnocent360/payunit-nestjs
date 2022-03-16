@@ -126,6 +126,7 @@ export class AppService {
       .then((request) => {
         this.all =request.data
         console.log(this.all)
+        return this.all
       })
       .catch((error) => {
         console.log(error);
