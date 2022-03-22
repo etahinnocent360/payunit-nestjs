@@ -1,27 +1,45 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { AppService } from './app.service';
-import { number, string } from "joi";
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { GetTransaction } from './transaction.model';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-  @Get('getpsp')
-  getTransact() {
-    return this.appService.getTransact();
+  constructor(
+    private readonly appService: AppService,
+    @InjectModel('getTransaction ')
+    private readonly getTransactionModel: Model<GetTransaction>,
+  ) {}
+  @Get('/getpsp/:id([0-9a-f]{24})')
+  async getTransact(@Param() param) {
+    console.log('nest params ', param.id);
+    const [transaction] = await Promise.all([
+      this.appService.getTransact(param.id),
+    ]);
+    return transaction;
   }
-
   @Post('initialize')
-  postApi(
+  async postApi(
     @Body('total_amount') total_amount: number,
     @Body('transaction_id') transaction_id: string,
     @Body('currency') currency: string,
     @Body('return_url') return_url: string,
   ) {
-  return   this.appService.postApi(transaction_id, total_amount, currency, return_url);
+    const [results] = await Promise.all([
+      this.appService.postApi(
+        total_amount,
+        transaction_id,
+        currency,
+        return_url,
+      ),
+    ]);
+    return results;
   }
 
-  @Post('payment')
+  @Post('payment/:t_id')
   makePayment(
+    @Param() param,
     @Body('gateway') gateway: string,
     @Body('amount') amount: number,
     @Body('transaction_id') transaction_id: string,
@@ -30,6 +48,7 @@ export class AppController {
     @Body('paymentType') paymentType: string,
   ) {
     return this.appService.makePayment(
+      param.t_id,
       gateway,
       amount,
       transaction_id,
