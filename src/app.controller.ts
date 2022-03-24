@@ -14,15 +14,13 @@ export class AppController {
   @Get('/getpsp/:id([0-9a-f]{24})')
   async getTransact(@Param() param) {
     console.log('nest params ', param.id);
-    const [transaction] = await Promise.all([
-      this.appService.getTransact(param.id),
-    ]);
-    return transaction;
+
+    return this.appService.getTransact(param.id);
   }
   @Post('initialize')
   async postApi(
     @Body('total_amount') total_amount: number,
-    @Body('transaction_id') transaction_id: string,
+    @Body('transaction_id') transaction_id: number,
     @Body('currency') currency: string,
     @Body('return_url') return_url: string,
   ) {

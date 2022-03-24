@@ -5,11 +5,17 @@ import { ConfigModule } from '@nestjs/config';
 import { configurations } from './lib/Configuration';
 import { validationSchema } from './lib/Validation';
 import { MongooseModule } from '@nestjs/mongoose';
-import { getPspSchema, getTransactionSchema } from "./transaction.model";
+import {
+  getPspSchema,
+  getTokenSchema,
+  getTransactionSchema,
+} from './transaction.model';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     HttpModule,
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configurations],
@@ -19,6 +25,7 @@ import { getPspSchema, getTransactionSchema } from "./transaction.model";
     MongooseModule.forFeature([
       { name: 'getTransaction ', schema: getTransactionSchema },
       { name: 'getPsp', schema: getPspSchema },
+      { name: 'gettokens', schema: getTokenSchema },
     ]),
   ],
   controllers: [AppController],
