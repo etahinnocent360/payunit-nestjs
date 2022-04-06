@@ -9,8 +9,8 @@ export class TransactionModel {
   ) {}
 }
 export interface GetToken {
-  'auth-token': string;
-  'x-token': string;
+  ['auth-token']: string;
+  ['x-token']: string;
   transaction_id: string;
   pay_token: string;
   payment_ref: string;
@@ -26,15 +26,18 @@ export const getTransactionSchema = new mongoose.Schema({
   t_url: {
     type: String,
   },
+  transaction_url: {
+    type: String,
+  },
   transaction_id: {
     type: String,
   },
 });
 export const getTokenSchema = new mongoose.Schema({
-  'auth-token': {
+  ['auth-token']: {
     type: String,
   },
-  'x-token': {
+  ['x-token']: {
     type: String,
   },
   transaction_id: {
@@ -67,7 +70,7 @@ export const getPspSchema = new mongoose.Schema({
   provider_logo: {
     type: String,
   },
-  gateway: {
+  provider_short_tag: {
     type: String,
   },
   provider_status: {
@@ -85,11 +88,15 @@ export const getPspSchema = new mongoose.Schema({
   providers_provider_id: {
     type: String,
   },
+  transaction_id: {
+    type: String,
+  },
 });
 export interface GetTransaction {
   t_id: string;
   t_sum: string;
   t_url: string;
+  transaction_url: string;
   transaction_id: string;
 }
 export interface GetPsp {
@@ -98,12 +105,13 @@ export interface GetPsp {
   provider_id: string;
   provider_name: string;
   provider_logo: string;
-  gateway: string;
+  provider_short_tag: string;
   provider_status: string;
   delete_time: string;
   service_accounts_account_id: string;
   service_accounts_users_user_id: string;
   providers_provider_id: string;
+  transaction_id: string;
 }
 export class Payment {
   constructor(

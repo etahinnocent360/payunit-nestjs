@@ -5,7 +5,7 @@ Content-Type: application/json
 
 ###
 
-GET http://localhost:4000/getpsp
+GET http://localhost:4000/getpsp/62421cb300b006a7106bb239
 Accept: application/json
 
 ###
@@ -14,7 +14,6 @@ Content-Type: application/json
 
 {
   "total_amount": 100000,
-  "transaction_id": "is43ssdnkodskdcjdjjkcxghj",
   "currency": "USD",
   "return_url": "http://localhost:4000"
 }

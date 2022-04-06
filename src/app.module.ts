@@ -1,4 +1,4 @@
-import { HttpModule, Module } from '@nestjs/common';
+import { HttpModule, MiddlewareConsumer, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -11,7 +11,7 @@ import {
   getTransactionSchema,
 } from './transaction.model';
 import { ScheduleModule } from '@nestjs/schedule';
-
+import { HeadersMiddlware } from './Headers.MiddleWare';
 @Module({
   imports: [
     HttpModule,
@@ -29,6 +29,12 @@ import { ScheduleModule } from '@nestjs/schedule';
     ]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+  ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(HeadersMiddlware).forRoutes('/');
+  }
+}

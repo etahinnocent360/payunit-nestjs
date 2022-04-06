@@ -4,7 +4,9 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { map, Observable } from "rxjs";
+import axios from 'axios';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class HttpRequestHeaderInterceptor implements NestInterceptor {
@@ -17,12 +19,21 @@ export class HttpRequestHeaderInterceptor implements NestInterceptor {
     const buff = Buffer.from(appBasic);
     const base64data = buff.toString('base64');
     console.log(base64data);
+
     request.headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Basic ${base64data}`,
-      'x-api-Key': process.env.apiKey,
-      mode: process.env.mode,
+      Headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Basic ${base64data}`,
+        ['x-api-Key']: process.env.apiKey,
+        mode: process.env.mode,
+      },
     };
-    return next.handle();
+    // request.headers = axios.defaults.headers.head;
+    return next.handle().pipe(
+      map((data: any) => {
+        // data = axios.defaults.headers.head; r
+        return data;
+      }),
+    );
   }
 }

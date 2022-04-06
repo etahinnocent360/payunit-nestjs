@@ -34,6 +34,7 @@
     "express-session": "^1.17.2",
     "joi": "^17.6.0",
     "mongoose": "^6.2.7",
+    "nest-keycloak-connect": "^1.8.2",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",

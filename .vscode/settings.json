@@ -5,6 +5,7 @@
 		"gettokens",
 		"Ininitial",
 		"makepayment",
+		"Middlware",
 		"mtnmomo",
 		"nestjs",
 		"paymentstatus",
@@ -12,5 +13,6 @@
 		"ssdnkodskdcjdjjkcxghj",
 		"urlinitialized",
 		"urlproceed"
-	]
+	],
+	"compile-hero.disable-compile-files-on-did-save-code": false
 }

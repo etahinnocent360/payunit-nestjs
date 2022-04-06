@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
   Param,
+  Redirect,
 } from '@nestjs/common';
 import {
   GetPsp,
@@ -17,7 +18,7 @@ import { GetTransaction } from './transaction.model';
 import { response } from 'express';
 import { configurations } from './lib/Configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { date, number, string } from 'joi';
+import { array, date, number, string } from "joi";
 import axios from 'axios';
 import { config, find } from 'rxjs';
 import Joi from 'joi';
@@ -26,7 +27,14 @@ import { Model, Schema } from 'mongoose';
 import { Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
-import { Cron, Interval, SchedulerRegistry } from '@nestjs/schedule';
+import {
+  Cron,
+  CronExpression,
+  Interval,
+  SchedulerRegistry,
+  Timeout,
+} from '@nestjs/schedule';
+import { request } from 'http';
 
 @Injectable()
 export class AppService {
@@ -60,11 +68,7 @@ export class AppService {
     transaction_id = 100000 + Math.floor(Math.random() * 900000);
     currency = 'USD';
     return_url = 'http://localhost:3000';
-    const appBasic = `${process.env.apiSecret}`;
-    const buff = Buffer.from(appBasic);
-    const base64data = buff.toString('base64');
-    console.log(base64data);
-    await axios
+ const res = await axios
       .post(
         `${this.baseUrl}/gateway/initialize`,
         {
@@ -74,15 +78,10 @@ export class AppService {
           return_url: return_url,
         },
         {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Basic ${base64data}`,
-            'x-api-Key': process.env.apiKey,
-            mode: process.env.mode,
-          },
+          headers:axios.defaults.headers.head
         },
       )
-      .then((request) => {
+      .then(async (request) => {
         let storeProduct = request.data.data;
         storeProduct = new this.getTransactionModel({
           t_id: request.data.data.t_id,
@@ -91,61 +90,58 @@ export class AppService {
           transaction_url: request.data.data.transaction_url,
           transaction_id: request.data.data.transaction_id,
         });
-        console.log(request.data);
         storeProduct.save();
+        return storeProduct
       })
       .catch((error) => {
         console.log(error);
       });
+ console.log(res)
+   return res
   }
   public async getTransact(_id) {
-    let transaction: any;
     // eslint-disable-next-line prefer-const
-    transaction = await this.getTransactionModel.findById(_id);
+    const transaction = await this.getTransactionModel.findById(_id);
+    console.log(`transaction_id goes here${transaction.transaction_id}`)
     console.log('transaction here', transaction);
-    const appBasic = `${process.env.apiSecret}`;
-    const buff = Buffer.from(appBasic);
-    const base64data = buff.toString('base64');
-    console.log(base64data);
-    await axios
+const psps = await axios
       .get(
         `${this.baseUrl}/gateway/gateways?t_url="${transaction.t_url}"&t_id="${transaction.t_id}"&t_sum="${transaction.t_sum}"`,
         {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Basic ${base64data}`,
-            'x-api-Key': process.env.apiKey,
-            mode: process.env.mode,
-          },
+          headers:axios.defaults.headers.head
         },
       )
       .then((request) => {
-        request.data.data.map((all) => {
-          all = new this.getPspModel({
-            create_time: all.create_time,
-            update_time: all.update_time,
-            provider_id: all.provider_id,
-            provider_name: all.provider_id,
-            provider_logo: all.provider_logo,
-            gateway: all.provider_short_tag,
-            provider_status: all.provider_status,
-            delete_time: all.delete_time,
-            service_accounts_account_id: all.service_accounts_account_id,
-            service_accounts_users_user_id: all.service_accounts_users_user_id,
-            providers_provider_id: all.providers_provider_id,
+        // request.data.data.map((all) => {
+      const  all = new this.getPspModel({
+            create_time: request.data.data.create_time,
+            update_time: request.data.data.update_time,
+            provider_id: request.data.data.provider_id,
+            provider_name: request.data.data.provider_id,
+            provider_logo: request.data.data.provider_logo,
+            gateway: request.data.data.provider_short_tag,
+            provider_status: request.data.data.provider_status,
+            delete_time: request.data.data.delete_time,
+            service_accounts_account_id: request.data.data.service_accounts_account_id,
+            service_accounts_users_user_id: request.data.data.service_accounts_users_user_id,
+            providers_provider_id: request.data.data.providers_provider_id,
+            transaction_id:request.data.data.transaction_id,
           });
-          console.log(all);
+      console.log(request.data.data.provider_id)
           all.save();
-        });
+        // });
+
+        console.log(all);
+        return request.data.data
       })
       .catch((error) => {
         console.log(error);
       });
+return psps
   }
 
-  //make payment
   async makePayment(
-    t_id: string,
+    _id: string,
     gateway: string,
     amount: number,
     transaction_id: string,
@@ -153,84 +149,96 @@ export class AppService {
     currency: string,
     paymentType: string,
   ) {
-    let transaction: any;
     // eslint-disable-next-line prefer-const
-    transaction = await this.getTransactionModel.findById(transaction_id);
+    const transaction = await this.getTransactionModel.findById(_id);
+    let allPsp = await this.getPspModel.findById(_id);
     console.log('transaction here', transaction);
-    let allPsp: any;
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    let _id: {};
-    // eslint-disable-next-line prefer-const
-    allPsp = await this.getPspModel.findById(_id);
-    const newPayment = new Payment(
+    console.log(allPsp)
+    currency = 'USD';
+    paymentType ='button'
+  const newPayment = new Payment(
       gateway,
       amount,
-      t_id,
+      _id,
       phone_number,
       currency,
       paymentType,
     );
     this.payment.push(newPayment);
-    const appBasic = `${process.env.apiSecret}`;
-    const buff = Buffer.from(appBasic);
-    const base64data = buff.toString('base64');
-    console.log(base64data);
     const res = await axios
       .post(
         `${this.baseUrl}/gateway/makepayment`,
         {
           gateway: newPayment.gateway,
           amount: newPayment.amount,
-          transaction_id: newPayment.transaction_id,
+          transaction_id: transaction.transaction_id,
           phone_number: newPayment.phone_number,
-          currency: newPayment.currency,
-          paymentType: newPayment.paymentType,
+          currency: currency,
+          paymentType:paymentType,
         },
         {
-          headers: {
-            Authorization: `Basic ${base64data}`,
-            'Content-Type': 'application/json',
-            'x-api-Key': process.env.apiKey,
-            mode: process.env.mode,
-          },
+          headers:axios.defaults.headers.head
         },
       )
       .then(async (request) => {
+        console.log(newPayment.gateway)
         let tokens = request.data.data;
-        tokens = new this.getTokenModel({
-          auth_token: 'request.data.data.auth-token',
-          x_token: 'request.data.data.x-token',
+          tokens = new this.getTokenModel({
           transaction_id: request.data.data.transaction_id,
           pay_token: request.data.data.pay_token,
           payment_ref: request.data.data.payment_ref,
-          gateway: request.data.data.gateway,
+            gateway:newPayment.gateway,
+            ['auth-token']: request.data.data['auth-token'],
+            ['x-token']: request.data.data['x-token'],
         });
-        console.log(request.data);
         tokens.save();
-        await axios
+        console.log(tokens);
+        const res =  await axios
           .get(
-            `${this.baseUrl}/gateway/paymentstatus/mtnmomo/
-      transaction_id=${request.data.data.transaction_id}&
-      pay_token=${request.data.data.pay_token}&
-      payment_ref=${request.data.data.payment_ref}`,
+            `${this.baseUrl}/gateway/paymentstatus/${tokens.gateway}/${transaction.transaction_id}?
+      pay_token="${tokens.pay_token}"&
+      payment_ref="${tokens.payment_ref}"`,
             {
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Basic ${base64data}`,
-                'x-api-Key': process.env.apiKey,
-                mode: process.env.mode,
-              },
+              headers:axios.defaults.headers.head
             },
           )
           .then((request) => {
+            console.log(request.data);
             return request.data;
           })
           .catch((error) => {
             console.log(error);
           });
+        return request.data.data
       })
       .catch((error) => {
         console.log(error);
       });
+    // this.getStatus(_id)
+    return res
   }
+  // async  getStatus(_id){
+  //   const newToken =await this.getTokenModel.findById(_id);
+  //   const transaction =await this.getTransactionModel.findById(_id);
+  //   console.log(`transaction_id goes here${newToken.transaction_id}`)
+  //   console.log('transaction here', transaction);
+  // const res =  await axios
+  //     .get(
+  //       `${this.baseUrl}/gateway/paymentstatus/${newToken.gateway}/${transaction.transaction_id}?
+  //     pay_token="${newToken.pay_token}"&
+  //     payment_ref="${newToken.payment_ref}"`,
+  //       {
+  //         headers:axios.defaults.headers.head
+  //       },
+  //     )
+  //     .then((request) => {
+  //       console.log(request.data.data);
+  //       return request.data.data;
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     });
+  // console.log(res.data)
+  // return res
+  // }
 }

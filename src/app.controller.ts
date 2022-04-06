@@ -1,40 +1,56 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get, HttpCode, HttpStatus,
+  NotFoundException,
+  Param,
+  Post,
+  UseInterceptors
+} from "@nestjs/common";
 import { AppService } from './app.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { GetTransaction } from './transaction.model';
+import { HttpRequestHeaderInterceptor } from './headers.interceptor';
 
 @Controller()
+// @UseInterceptors(new HttpRequestHeaderInterceptor())
 export class AppController {
   constructor(
     private readonly appService: AppService,
     @InjectModel('getTransaction ')
     private readonly getTransactionModel: Model<GetTransaction>,
   ) {}
-  @Get('/getpsp/:id([0-9a-f]{24})')
+  // @UseInterceptors(HttpRequestHeaderInterceptor)
+  @Get('/getpsp/:id')
   async getTransact(@Param() param) {
     console.log('nest params ', param.id);
 
     return this.appService.getTransact(param.id);
   }
+  // @Get('/getstatus/:id')
+  // async getStatus(_id) {
+  //   return this.appService.getStatus(_id);
+  // }
+
   @Post('initialize')
+  // @HttpCode(HttpStatus.OK)
+  // @UseInterceptors(HttpRequestHeaderInterceptor)
   async postApi(
     @Body('total_amount') total_amount: number,
     @Body('transaction_id') transaction_id: number,
     @Body('currency') currency: string,
     @Body('return_url') return_url: string,
   ) {
-    const [results] = await Promise.all([
-      this.appService.postApi(
-        total_amount,
-        transaction_id,
-        currency,
-        return_url,
-      ),
-    ]);
-    return results;
+    const res = await this.appService.postApi(
+      total_amount,
+      transaction_id,
+      currency,
+      return_url,
+    );
+    return res;
   }
-
+  // @UseInterceptors(HttpRequestHeaderInterceptor)
   @Post('payment/:t_id')
   makePayment(
     @Param() param,
