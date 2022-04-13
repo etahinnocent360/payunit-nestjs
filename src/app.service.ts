@@ -1,130 +1,216 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Body, HttpService, Injectable, Param } from '@nestjs/common';
-import { TransactionModel } from "./transaction.model";
-import { GetTransaction } from "./transaction.model";
+import {
+  Body,
+  HttpService,
+  Injectable,
+  NotFoundException,
+  Param,
+  Redirect,
+} from '@nestjs/common';
+import {
+  GetPsp,
+  GetToken,
+  getTokenSchema,
+  Payment,
+  TransactionModel,
+} from './transaction.model';
+import { GetTransaction } from './transaction.model';
 import { response } from 'express';
 import { configurations } from './lib/Configuration';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { date, number, string } from 'joi';
+import { array, date, number, string } from "joi";
 import axios from 'axios';
-import { config } from 'rxjs';
-import Joi from "joi";
+import { config, find } from 'rxjs';
+import Joi from 'joi';
+import { Session } from 'express-session';
+import { Model, Schema } from 'mongoose';
+import { Types } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import mongoose from 'mongoose';
+import {
+  Cron,
+  CronExpression,
+  Interval,
+  SchedulerRegistry,
+  Timeout,
+} from '@nestjs/schedule';
+import { request } from 'http';
 
 @Injectable()
 export class AppService {
-  public transactions: TransactionModel[] =[]
-  public payUnitData={
-    transaction_id:10,
-    transaction_amount:10000,
-    currency:'USD',
-    return_url:'http://localhost:3000',
-  };
-  // private all
-  private completeTransaction = {
-    gateway: 'mtnmomo',
-    transaction_amount: 1001,
-    transaction_id: 1005,
-    phone_number: 681479697,
-    currency: 'USD',
-    paymentType: 'button',
-  };
-  private urlinitialized = 'https://app.payunit.net/api/gateway/initialize';
-  private paymentUrl = 'https://app.payunit.net/api/gateway/makepayment';
-  private urlproceed = 'https://app.payunit.net/api';
+  private baseUrl = process.env.baseUrl;
+  public storeProduct;
   constructor(
+    @InjectModel('getTransaction ')
+    private readonly getTransactionModel: Model<GetTransaction>,
+    @InjectModel('getPsp') private readonly getPspModel: Model<GetPsp>,
+    @InjectModel('gettokens') private readonly getTokenModel: Model<GetToken>,
     private httpService: HttpService,
     private configService: ConfigService,
+    private readonly schedulerRegistry: SchedulerRegistry,
   ) {}
-
-  async postApi() {
-    const appBasic = `${process.env.apiSecret}`;
-    const buff = Buffer.from(appBasic);
-    const base64data = buff.toString('base64');
-    console.log(base64data);
-    await axios
+  async postApi(
+    total_amount: number,
+    transaction_id: number,
+    currency: string,
+    return_url: string,
+  ) {
+    const newTransaction = await new TransactionModel(
+      total_amount,
+      transaction_id,
+      currency,
+      return_url,
+    );
+    transaction_id = 100000 + Math.floor(Math.random() * 9000000000000);
+    return_url = 'http://localhost:3000';
+ const res = await axios
       .post(
-        this.urlinitialized,
+        `${this.baseUrl}/gateway/initialize`,
         {
-          transaction_id:this.payUnitData.transaction_id,
-          transact_amount:this.payUnitData.transaction_amount,
-          currency:this.payUnitData.currency,
-          return_url:this.payUnitData.return_url
+          total_amount: newTransaction.total_amount,
+          transaction_id: transaction_id,
+          currency:newTransaction.currency,
+          return_url: return_url,
         },
         {
-          headers: {
-            'Authorization': `Basic ${base64data}`,
-            'Content-Type': 'application/json',
-            'x-api-Key': process.env.apiKey,
-            'mode': process.env.mode,
-          },
+          headers:axios.defaults.headers.head
         },
       )
-      .then((request) => {
-        // this.all = response.data
-        // console.log(this.all)
-        console.log(request.data)
+      .then(async (request) => {
+        let storeProduct = request.data.data;
+        storeProduct = new this.getTransactionModel({
+          t_id: request.data.data.t_id,
+          t_sum: request.data.data.t_sum,
+          t_url: request.data.data.t_url,
+          transaction_url: request.data.data.transaction_url,
+          transaction_id: request.data.data.transaction_id,
+        });
+        storeProduct.save();
+        return storeProduct
       })
       .catch((error) => {
         console.log(error);
       });
+ console.log(res)
+   return res
   }
-  getTransact(params) {
-    const appBasic = `${process.env.apiSecret}`;
-    const buff = Buffer.from(appBasic);
-    const base64data = buff.toString('base64');
-    console.log(base64data);
-    return axios
-      .get(`${this.urlproceed}/gateway/gateways?t_url=""&t_id=""&t_sum=""`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Basic ${base64data}`,
-          'x-api-Key': process.env.apiKey,
-          mode: process.env.mode,
+  public async getTransact(_id) {
+    // eslint-disable-next-line prefer-const
+    const transaction = await this.getTransactionModel.findById(_id);
+    console.log(`transaction_id goes here${transaction.transaction_id}`)
+    console.log('transaction here', transaction);
+const psps = await axios
+      .get(
+        `${this.baseUrl}/gateway/gateways?t_url="${transaction.t_url}"&t_id="${transaction.t_id}"&t_sum="${transaction.t_sum}"`,
+        {
+          headers:axios.defaults.headers.head
         },
+      )
+      .then((request) => {
+        // request.data.data.map((all) => {
+      const  all = new this.getPspModel({
+            create_time: request.data.data.create_time,
+            update_time: request.data.data.update_time,
+            provider_id: request.data.data.provider_id,
+            provider_name: request.data.data.provider_id,
+            provider_logo: request.data.data.provider_logo,
+            gateway: request.data.data.provider_short_tag,
+            provider_status: request.data.data.provider_status,
+            delete_time: request.data.data.delete_time,
+            service_accounts_account_id: request.data.data.service_accounts_account_id,
+            service_accounts_users_user_id: request.data.data.service_accounts_users_user_id,
+            providers_provider_id: request.data.data.providers_provider_id,
+            transaction_id:request.data.data.transaction_id,
+          });
+      console.log(request.data.data.provider_id)
+         all.save();
+      return  request.data
+        // });
+
+        console.log(all);
+        return request.data.data
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+return psps
+  }
+
+  async makePayment(
+    _id: string,
+    gateway: string,
+    amount: number,
+    transaction_id: string,
+    phone_number: number,
+    currency: string,
+    paymentType: string,
+  ) {
+    // eslint-disable-next-line prefer-const
+    const transaction = await this.getTransactionModel.findById(_id);
+    let allPsp = await this.getPspModel.findById(_id);
+    console.log('transaction here', transaction);
+    console.log(allPsp)
+    paymentType ='button'
+  const newPayment = new Payment(
+      gateway,
+      amount,
+      _id,
+      phone_number,
+      currency,
+      paymentType,
+    );
+    const res = await axios
+      .post(
+        `${this.baseUrl}/gateway/makepayment`,
+        {
+          gateway: newPayment.gateway,
+          amount: newPayment.amount,
+          transaction_id: transaction.transaction_id,
+          phone_number: newPayment.phone_number,
+          currency: currency,
+          paymentType:paymentType,
+        },
+        {
+          headers:axios.defaults.headers.head
+        },
+      )
+      .then(async (request) => {
+        console.log(newPayment.gateway)
+        let tokens = request.data;
+          tokens = new this.getTokenModel({
+          transaction_id: request.data.data.transaction_id,
+          pay_token: request.data.data.pay_token,
+          payment_ref: request.data.data.payment_ref,
+            gateway:newPayment.gateway,
+            ['auth-token']: request.data.data['auth-token'],
+            ['x-token']: request.data.data['x-token'],
+            message:request.data.message,
+        });
+        console.log(tokens);
+       return  tokens.save();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    // this.getStatus(_id)
+    return (res)
+  }
+  // @Interval(2000)
+  async  getStatus(_id:string){
+    const tokens = await this.getTokenModel.findById(_id)
+    console.log('tokens here', _id);
+    console.log(tokens)
+   const res = await axios.get(
+      `${this.baseUrl}/gateway/paymentstatus/${tokens.gateway}/${tokens.transaction_id}?
+      pay_token="${tokens.pay_token}"&
+      payment_ref="${tokens.payment_ref}"`,
+      {
+        headers:axios.defaults.headers.head
       },
-      )
-      .then((request) => {
-        // request = this.all.t_id
-        console.log(request)
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }
-
-  //make payment
-
-  async makePayment() {
-    const appBasic = `${process.env.apiSecret}`;
-    const buff = Buffer.from(appBasic);
-    const base64data = buff.toString('base64');
-    console.log(base64data);
-    await axios
-      .post(
-        this.paymentUrl,
-        {
-          gateway: this.completeTransaction.gateway,
-          total_amount: this.completeTransaction.transaction_amount,
-          transaction_id: this.completeTransaction.transaction_id,
-          phone_number: this.completeTransaction.phone_number,
-          currency: this.completeTransaction.currency,
-          paymentType: this.completeTransaction.paymentType,
-        },
-        {
-          headers: {
-            Authorization: `Basic ${base64data}`,
-            'Content-Type': 'application/json',
-            'x-api-Key': process.env.apiKey,
-            mode: process.env.mode,
-          },
-        },
-      )
-      .then((request) => {
-        console.log(request.data);
-        request.data;
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    ).then(request =>{
+      console.log(request.data)
+      return request.data
+    })
+    return res
   }
 }
