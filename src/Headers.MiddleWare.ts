@@ -1,10 +1,10 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
-import axios from "axios";
+import axios from 'axios';
 
 @Injectable()
 export class HeadersMiddlware implements NestMiddleware {
-  use(req: Request, res: Response, next: NextFunction){
+  use(req: Request, res: Response, next: NextFunction) {
     const appBasic = `${process.env.apiSecret}`;
     const buff = Buffer.from(appBasic);
     const base64data = buff.toString('base64');

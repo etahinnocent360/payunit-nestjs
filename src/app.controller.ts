@@ -28,14 +28,13 @@ export class AppController {
 
     return this.appService.getTransact(param.id);
   }
-  // @Get('/getstatus/:id')
-  // async getStatus(_id) {
-  //   return this.appService.getStatus(_id);
-  // }
+  @Get('/getstatus/:id')
+  async getStatus(@Param() param) {
+    // console.log('id here', param.id);
+    return this.appService.getStatus(param.id);
+  }
 
   @Post('initialize')
-  // @HttpCode(HttpStatus.OK)
-  // @UseInterceptors(HttpRequestHeaderInterceptor)
   async postApi(
     @Body('total_amount') total_amount: number,
     @Body('transaction_id') transaction_id: number,

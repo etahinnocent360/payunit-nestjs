@@ -15,6 +15,7 @@ export interface GetToken {
   pay_token: string;
   payment_ref: string;
   gateway: string;
+  message: string;
 }
 export const getTransactionSchema = new mongoose.Schema({
   t_id: {
@@ -50,6 +51,9 @@ export const getTokenSchema = new mongoose.Schema({
     type: String,
   },
   gateway: {
+    type: String,
+  },
+  message: {
     type: String,
   },
 });

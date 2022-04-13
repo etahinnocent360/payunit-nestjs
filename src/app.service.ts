@@ -38,10 +38,6 @@ import { request } from 'http';
 
 @Injectable()
 export class AppService {
-  public getIninitial: GetTransaction[] = [];
-  public transaction: TransactionModel[] = [];
-  public allPsp: GetPsp[] = [];
-  public payment: Payment[] = [];
   private baseUrl = process.env.baseUrl;
   public storeProduct;
   constructor(
@@ -65,8 +61,7 @@ export class AppService {
       currency,
       return_url,
     );
-    transaction_id = 100000 + Math.floor(Math.random() * 900000);
-    currency = 'USD';
+    transaction_id = 100000 + Math.floor(Math.random() * 9000000000000);
     return_url = 'http://localhost:3000';
  const res = await axios
       .post(
@@ -74,7 +69,7 @@ export class AppService {
         {
           total_amount: newTransaction.total_amount,
           transaction_id: transaction_id,
-          currency: currency,
+          currency:newTransaction.currency,
           return_url: return_url,
         },
         {
@@ -128,7 +123,8 @@ const psps = await axios
             transaction_id:request.data.data.transaction_id,
           });
       console.log(request.data.data.provider_id)
-          all.save();
+         all.save();
+      return  request.data
         // });
 
         console.log(all);
@@ -154,7 +150,6 @@ return psps
     let allPsp = await this.getPspModel.findById(_id);
     console.log('transaction here', transaction);
     console.log(allPsp)
-    currency = 'USD';
     paymentType ='button'
   const newPayment = new Payment(
       gateway,
@@ -164,7 +159,6 @@ return psps
       currency,
       paymentType,
     );
-    this.payment.push(newPayment);
     const res = await axios
       .post(
         `${this.baseUrl}/gateway/makepayment`,
@@ -182,7 +176,7 @@ return psps
       )
       .then(async (request) => {
         console.log(newPayment.gateway)
-        let tokens = request.data.data;
+        let tokens = request.data;
           tokens = new this.getTokenModel({
           transaction_id: request.data.data.transaction_id,
           pay_token: request.data.data.pay_token,
@@ -190,55 +184,33 @@ return psps
             gateway:newPayment.gateway,
             ['auth-token']: request.data.data['auth-token'],
             ['x-token']: request.data.data['x-token'],
+            message:request.data.message,
         });
-        tokens.save();
         console.log(tokens);
-        const res =  await axios
-          .get(
-            `${this.baseUrl}/gateway/paymentstatus/${tokens.gateway}/${transaction.transaction_id}?
-      pay_token="${tokens.pay_token}"&
-      payment_ref="${tokens.payment_ref}"`,
-            {
-              headers:axios.defaults.headers.head
-            },
-          )
-          .then((request) => {
-            console.log(request.data);
-            return request.data;
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-        return request.data.data
+       return  tokens.save();
       })
       .catch((error) => {
         console.log(error);
       });
     // this.getStatus(_id)
+    return (res)
+  }
+  // @Interval(2000)
+  async  getStatus(_id:string){
+    const tokens = await this.getTokenModel.findById(_id)
+    console.log('tokens here', _id);
+    console.log(tokens)
+   const res = await axios.get(
+      `${this.baseUrl}/gateway/paymentstatus/${tokens.gateway}/${tokens.transaction_id}?
+      pay_token="${tokens.pay_token}"&
+      payment_ref="${tokens.payment_ref}"`,
+      {
+        headers:axios.defaults.headers.head
+      },
+    ).then(request =>{
+      console.log(request.data)
+      return request.data
+    })
     return res
   }
-  // async  getStatus(_id){
-  //   const newToken =await this.getTokenModel.findById(_id);
-  //   const transaction =await this.getTransactionModel.findById(_id);
-  //   console.log(`transaction_id goes here${newToken.transaction_id}`)
-  //   console.log('transaction here', transaction);
-  // const res =  await axios
-  //     .get(
-  //       `${this.baseUrl}/gateway/paymentstatus/${newToken.gateway}/${transaction.transaction_id}?
-  //     pay_token="${newToken.pay_token}"&
-  //     payment_ref="${newToken.payment_ref}"`,
-  //       {
-  //         headers:axios.defaults.headers.head
-  //       },
-  //     )
-  //     .then((request) => {
-  //       console.log(request.data.data);
-  //       return request.data.data;
-  //     })
-  //     .catch((error) => {
-  //       console.log(error);
-  //     });
-  // console.log(res.data)
-  // return res
-  // }
 }
