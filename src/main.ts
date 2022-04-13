@@ -17,6 +17,6 @@ async function bootstrap() {
     }),
   );
   const config = app.get(ConfigService);
-  await app.listen(5000);
+  await app.listen(process.env.PORT || 4000);
 }
 bootstrap();
