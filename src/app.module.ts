@@ -21,7 +21,7 @@ import { HeadersMiddlware } from './Headers.MiddleWare';
       load: [configurations],
       validationSchema,
     }),
-    MongooseModule.forRoot('mongodb://localhost:27017/transactions'),
+    MongooseModule.forRoot(process.env.DB_URL),
     MongooseModule.forFeature([
       { name: 'getTransaction ', schema: getTransactionSchema },
       { name: 'getPsp', schema: getPspSchema },
