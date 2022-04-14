@@ -32,6 +32,7 @@
     "axios": "^0.26.0",
     "cores": "^0.8.5",
     "express-session": "^1.17.2",
+    "helmet": "^5.0.2",
     "joi": "^17.6.0",
     "mongoose": "^6.2.7",
     "nest-keycloak-connect": "^1.8.2",
