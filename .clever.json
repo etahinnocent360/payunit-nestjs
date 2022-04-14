@@ -1,0 +1,11 @@
+{
+  "apps": [
+    {
+      "app_id": "app_776b5639-9efc-46ed-8c07-f790aef8d402",
+      "org_id": "user_3b8fcb2a-5f66-406b-a5ba-3bbe25321a28",
+      "deploy_url": "https://github.com/etahinnocent360/payunit-nestjs.git",
+      "name": "payunit-nestjs",
+      "alias": "payunit-nestjs"
+    }
+  ]
+}
