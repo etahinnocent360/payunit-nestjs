@@ -34,7 +34,7 @@ export class AppController {
     return this.appService.getStatus(param.id);
   }
 
-  @Post('initialize')
+  @Post('/initialize')
   async postApi(
     @Body('total_amount') total_amount: number,
     @Body('transaction_id') transaction_id: number,
@@ -50,7 +50,7 @@ export class AppController {
     return res;
   }
   // @UseInterceptors(HttpRequestHeaderInterceptor)
-  @Post('payment/:t_id')
+  @Post('/payment/:t_id')
   makePayment(
     @Param() param,
     @Body('gateway') gateway: string,
