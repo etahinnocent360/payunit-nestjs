@@ -62,7 +62,7 @@ export class AppService {
       return_url,
     );
     transaction_id = 100000 + Math.floor(Math.random() * 9000000000000);
-    return_url = 'https://fancy-sable-a17ef4.netlify.app/';
+    return_url = 'https://react-ecommerce2-eta.vercel.app/';
  const res = await axios
       .post(
         `${this.baseUrl}/gateway/initialize`,
