@@ -34,7 +34,7 @@ export class AppController {
     return this.appService.getStatus(param.id);
   }
 
-  @Post('/initialize')
+  @Post('/initialize/')
   async postApi(
     @Body('total_amount') total_amount: number,
     @Body('transaction_id') transaction_id: number,
