@@ -1,11 +1,26 @@
 import * as mongoose from 'mongoose';
-
 export class TransactionModel {
   constructor(
     public total_amount: number,
     public transaction_id: number,
     public currency: string,
     public return_url: string,
+  ) {}
+}
+export class TransPspModel {
+  constructor(
+  private  create_time: string,
+ private update_time: string,
+ private provider_id: string,
+ private provider_name: string,
+ private provider_logo: string,
+private  provider_short_tag: string,
+ private provider_status: string,
+ private delete_time: string,
+ private service_accounts_account_id: string,
+ private service_accounts_users_user_id: string,
+ private providers_provider_id: string,
+ private transaction_id: string,
   ) {}
 }
 export interface GetToken {
