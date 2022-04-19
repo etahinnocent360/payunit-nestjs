@@ -8,7 +8,6 @@ export class HeadersMiddlware implements NestMiddleware {
     const appBasic = `${process.env.apiSecret}`;
     const buff = Buffer.from(appBasic);
     const base64data = buff.toString('base64');
-    console.log('coming from middle ware');
     const data = {
       headers: {
         ['Content-Type']: 'application/json',
