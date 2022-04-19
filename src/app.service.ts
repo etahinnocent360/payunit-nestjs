@@ -89,9 +89,8 @@ export class AppService {
         return storeProduct
       })
       .catch((error) => {
-        console.log(error);
+        return error.response.data
       });
- console.log(res)
    return res
   }
   public async getTransact(_id) {
@@ -126,12 +125,10 @@ const psps = await axios
          all.save();
       return  request.data
         // });
-
-        console.log(all);
         return request.data.data
       })
       .catch((error) => {
-        console.log(error);
+        return error.response.data
       });
 return psps
   }
@@ -149,7 +146,6 @@ return psps
     const transaction = await this.getTransactionModel.findById(_id);
     let allPsp = await this.getPspModel.findById(_id);
     console.log('transaction here', transaction);
-    console.log(allPsp)
     paymentType ='button'
   const newPayment = new Payment(
       gateway,
@@ -175,7 +171,6 @@ return psps
         },
       )
       .then(async (request) => {
-        console.log(newPayment.gateway)
         let tokens = request.data;
           tokens = new this.getTokenModel({
           transaction_id: request.data.data.transaction_id,
@@ -186,11 +181,10 @@ return psps
             ['x-token']: request.data.data['x-token'],
             message:request.data.message,
         });
-        console.log(tokens);
        return  tokens.save();
       })
       .catch((error) => {
-        console.log(error);
+        return error.response.data;
       });
     // this.getStatus(_id)
     return (res)
@@ -198,8 +192,6 @@ return psps
   // @Interval(2000)
   async  getStatus(_id:string){
     const tokens = await this.getTokenModel.findById(_id)
-    console.log('tokens here', _id);
-    console.log(tokens)
    const res = await axios.get(
       `${this.baseUrl}/gateway/paymentstatus/${tokens.gateway}/${tokens.transaction_id}?
       pay_token="${tokens.pay_token}"&
@@ -208,9 +200,10 @@ return psps
         headers:axios.defaults.headers.head
       },
     ).then(request =>{
-      console.log(request.data)
       return request.data
-    })
+    }).catch(error =>{
+      return error.response.data
+   })
     return res
   }
 }

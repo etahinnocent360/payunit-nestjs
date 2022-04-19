@@ -5,8 +5,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   const options = new DocumentBuilder()
-    .setTitle('Payunit rest api')
-    .setDescription('integrating payunit rest api with react')
+    .setTitle('Payunit REST API')
+    .setDescription('integrating payunit REST API with swagger')
     .setVersion('1.0.0')
     .build();
   const document = SwaggerModule.createDocument(app, options);
