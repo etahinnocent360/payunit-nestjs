@@ -12,6 +12,7 @@ import {
 } from './transaction.model';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HeadersMiddlware } from './Headers.MiddleWare';
+import { ErrorhandlerMiddleware } from "./commons/errorhandler.middleware";
 @Module({
   imports: [
     HttpModule,
@@ -29,12 +30,11 @@ import { HeadersMiddlware } from './Headers.MiddleWare';
     ]),
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-  ],
+  providers: [AppService],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(HeadersMiddlware).forRoutes('/');
+    // consumer.apply(ErrorhandlerMiddleware).forRoutes('/');
   }
 }
