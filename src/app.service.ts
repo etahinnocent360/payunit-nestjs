@@ -63,6 +63,7 @@ export class AppService {
     );
     transaction_id = 100000 + Math.floor(Math.random() * 9000000000000);
     return_url = 'https://react-ecommerce2-eta.vercel.app/';
+    console.log(axios.defaults.data, 'from service')
  const res = await axios
       .post(
         `${this.baseUrl}/gateway/initialize`,
@@ -86,6 +87,7 @@ export class AppService {
           transaction_id: request.data.data.transaction_id,
         });
         storeProduct.save();
+        // console.log(storeProduct)
         return storeProduct
       })
       .catch((error) => {

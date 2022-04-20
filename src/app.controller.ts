@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
 import { AppService } from './app.service';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -6,8 +6,8 @@ import {
   GetPsp,
   GetTransaction,
   Initialize,
-  Payment, PaymentModel
-} from "./transaction.model";
+  PaymentModel,
+} from './transaction.model';
 import { ApiBody, ApiParam, ApiResponse } from '@nestjs/swagger';
 
 @Controller()
@@ -27,7 +27,8 @@ export class AppController {
   })
   @ApiParam({
     name: 'id',
-    description: 'Gets the mongodb object id from response of the initialized transaction',
+    description:
+      'Gets the mongodb object id from response of the initialized transaction',
   })
   async getTransact(@Param() param) {
     console.log('nest params ', param.id);
@@ -62,13 +63,23 @@ export class AppController {
     @Body('currency') currency: string,
     @Body('return_url') return_url: string,
   ) {
-    const res = await this.appService.postApi(
-      total_amount,
-      transaction_id,
-      currency,
-      return_url,
-    );
-    return res;
+    if(currency ==="XAF" || currency==="USD"){
+      return await this.appService.postApi(
+        total_amount,
+        transaction_id,
+        currency,
+        return_url,
+      );
+    } else {
+      throw new HttpException(
+        {
+          status: HttpStatus.FORBIDDEN,
+          error: `currency of type ${currency} is not supported`,
+        },
+        HttpStatus.FORBIDDEN,
+      );
+      // return 'please provide a valid currency';
+    }
   }
   // @UseInterceptors(HttpRequestHeaderInterceptor)
   @Post('/payment/:id')
