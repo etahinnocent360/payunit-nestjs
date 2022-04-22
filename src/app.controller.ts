@@ -33,7 +33,7 @@ export class AppController {
   @Get('/getpsp/:id')
   @ApiResponse({
     status: 200,
-    description: 'Success',
+    description: 'Ok',
     schema: {
       example: {
         status: 'SUCCESS',
@@ -141,7 +141,7 @@ export class AppController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Success',
+    description: 'Ok',
     schema: {
       example: {
         status: 'SUCCESSFUL',
@@ -234,21 +234,6 @@ export class AppController {
   @Post('/payment/:id')
   @ApiResponse({
     status: 201,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request',
-    schema: {
-      example: {
-        status: 'FAILED',
-        statusCode: 400,
-        message: 'Transaction currency, string, not supported at this time.',
-        data: [],
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
     description: 'created',
     schema: {
       example: {
@@ -260,6 +245,18 @@ export class AppController {
         message:
           'Please confirm the Transaction on your mobile by dialing *126#',
         _id: '62626cfe2f411f8b77c5f0e2',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+    schema: {
+      example: {
+        status: 'FAILED',
+        statusCode: 400,
+        message: 'Transaction currency, string, not supported at this time.',
+        data: [],
       },
     },
   })
