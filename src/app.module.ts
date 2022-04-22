@@ -12,7 +12,7 @@ import {
 } from './transaction.model';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HeadersMiddlware } from './Headers.MiddleWare';
-import { ErrorhandlerMiddleware } from "./commons/errorhandler.middleware";
+// import { ErrorhandlerMiddleware } from "./commons/errorhandler.middleware";
 @Module({
   imports: [
     HttpModule,
